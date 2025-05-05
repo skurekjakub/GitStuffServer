@@ -2,6 +2,7 @@ import * as azdev from "azure-devops-node-api";
 import { GitApi } from "azure-devops-node-api/GitApi.js";
 import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.js";
 import { getAdoConfig, streamToString } from "../utils/utilities.js";
+import { TestRunOutcome } from "azure-devops-node-api/interfaces/TestInterfaces.js";
 
 /**
  * Establishes connection to Azure DevOps and returns the GitApi instance.
@@ -50,37 +51,74 @@ export async function getLatestPrIterationChanges(
 }
 
 /**
- * Fetches the content of a file at a specific commit.
+ * Fetches the content of a file at a specific commit or from the source branch for new files.
+ * For new files (Add change type), we use the source branch to access the content.
  */
 export async function getFileContent(
     gitApi: GitApi,
     repositoryId: string,
     path: string,
     project: string,
-    commitSha: string
+    commitSha: string, // Target commit for existing/modified/deleted files
+    isNewFile: boolean = false,
+    sourceBranch?: string // Source branch name, needed for new files
 ): Promise<string> {
     try {
-        const contentStream: NodeJS.ReadableStream = await gitApi.getItemContent(
-            repositoryId, // repositoryId
-            path, // path
-            project, // project
-            undefined, // scopePath
-            GitInterfaces.VersionControlRecursionType.None, // recursionType
-            true, // includeContentMetadata
-            true, // latestProcessedChange
-            false, //  // fileName
-            { // versionDescriptor
+        // Normalize the path (remove leading slash if present)
+        const relativePath = path.startsWith('/') ? path.substring(1) : path;
+
+        // Determine the version descriptor based on whether it's a new file
+        let versionDescriptor: GitInterfaces.GitVersionDescriptor;
+        if (isNewFile && sourceBranch) {
+            versionDescriptor = {
+                version: sourceBranch,
+                versionType: GitInterfaces.GitVersionType.Branch
+            };
+        } else {
+            versionDescriptor = {
                 version: commitSha,
-                versionType: GitInterfaces.GitVersionType.Commit,
-                versionOptions: GitInterfaces.GitVersionOptions.None
-            },
-            true
+                versionType: GitInterfaces.GitVersionType.Commit
+            };
+        }
+
+        // Use simpler API call with fewer parameters
+        const contentStream: NodeJS.ReadableStream = await gitApi.getItemContent(
+            repositoryId,
+            relativePath,
+            project,
+            undefined, // scopePath
+            undefined, // recursionLevel
+            false,     // includeContentMetadata
+            false,     // latestProcessedChange
+            false,     // download
+            versionDescriptor,
+            true,      // includeContent (explicitly true)
+            false      // resolveLfs
         );
+
+        // Convert stream to string
         return await streamToString(contentStream);
     } catch (err: any) {
         if (err.statusCode === 404) {
-            return ""; // Return empty string for not found files
+            return isNewFile
+                ? `Could not fetch this newly added file from branch '${sourceBranch || 'unknown'}'. You may need to view it in the Azure DevOps web interface.`
+                : ""; // Return empty string for other not found files
         }
-        throw err; // Rethrow other errors
+
+        // If we got an error response with JSON content, parse and return it in a readable format
+        if (typeof err.message === 'string' && err.message.includes('{')) {
+            try {
+                // Try to extract the JSON part of the error message
+                const jsonMatch = err.message.match(/({.*})/);
+                if (jsonMatch && jsonMatch[1]) {
+                    const errorJson = JSON.parse(jsonMatch[1]);
+                    return `Error: ${errorJson.message || 'Unknown API error'}`;
+                }
+            } catch (parseErr) {
+                // If we can't parse it, just return the original message
+            }
+        }
+
+        return `Error accessing file content: ${err.message || 'Unknown error occurred'}`;
     }
 }

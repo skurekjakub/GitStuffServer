@@ -236,3 +236,62 @@ export async function streamToString(stream: NodeJS.ReadableStream): Promise<str
     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
 }
+
+/**
+ * Generates a simple line-by-line diff between two strings.
+ * @param originalContent The original string content.
+ * @param modifiedContent The modified string content.
+ * @returns A string representing the diff, with + for additions and - for deletions.
+ */
+export function generateSimpleDiff(modifiedContent: string, originalContent: string): string {
+    const originalLines = originalContent.split('\n');
+    const modifiedLines = modifiedContent.split('\n');
+    const diffLines: string[] = [];
+
+    const maxLen = Math.max(originalLines.length, modifiedLines.length);
+    let originalIndex = 0;
+    let modifiedIndex = 0;
+
+    // Basic line comparison (not a sophisticated diff algorithm)
+    while (originalIndex < originalLines.length || modifiedIndex < modifiedLines.length) {
+        const originalLine = originalLines[originalIndex];
+        const modifiedLine = modifiedLines[modifiedIndex];
+
+        if (originalIndex < originalLines.length && modifiedIndex < modifiedLines.length) {
+            if (originalLine === modifiedLine) {
+                diffLines.push(`  ${originalLine}`); // Unchanged
+                originalIndex++;
+                modifiedIndex++;
+            } else {
+                // Check if line was potentially deleted
+                const nextModifiedLine = modifiedLines[modifiedIndex + 1];
+                if (originalLine === nextModifiedLine) {
+                    diffLines.push(`+ ${modifiedLine}`); // Added
+                    modifiedIndex++;
+                } 
+                // Check if line was potentially added
+                else {
+                    const nextOriginalLine = originalLines[originalIndex + 1];
+                    if (modifiedLine === nextOriginalLine) {
+                        diffLines.push(`- ${originalLine}`); // Deleted
+                        originalIndex++;
+                    } else {
+                        // Assume modified
+                        diffLines.push(`- ${originalLine}`);
+                        diffLines.push(`+ ${modifiedLine}`);
+                        originalIndex++;
+                        modifiedIndex++;
+                    }
+                }
+            }
+        } else if (originalIndex < originalLines.length) {
+            diffLines.push(`- ${originalLine}`); // Deleted
+            originalIndex++;
+        } else if (modifiedIndex < modifiedLines.length) {
+            diffLines.push(`+ ${modifiedLine}`); // Added
+            modifiedIndex++;
+        }
+    }
+
+    return diffLines.join('\n');
+}

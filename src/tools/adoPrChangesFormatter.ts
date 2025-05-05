@@ -1,6 +1,7 @@
 import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.js";
 import { GitApi } from "azure-devops-node-api/GitApi.js";
 import { getFileContent } from "./adoPrChangesService.js";
+import { generateSimpleDiff } from "../utils/utilities.js"; // Import the moved function
 
 /**
  * Formats the PR changes into a readable string output.
@@ -15,7 +16,7 @@ export async function formatPrChangesOutput(
     iterationChanges: GitInterfaces.GitPullRequestIterationChanges,
     latestIteration: GitInterfaces.GitPullRequestIteration
 ): Promise<string> {
-    let output = `Changes for PR #${pullRequestId} (${sourceBranch} -> ${targetBranch}):\n\n`;
+    let output = `Changes for PR #${pullRequestId} (TARGET BRANCH:${targetBranch} SOURCE BRANCH:${sourceBranch}):\n\n`;
 
     if (!iterationChanges?.changeEntries || iterationChanges.changeEntries.length === 0) {
         return "No changes found in the latest PR iteration.";
@@ -51,14 +52,6 @@ export async function formatPrChangesOutput(
                 if (baseCommitSha && baseCheckPath) {
                     try {
                         baseContent = await getFileContent(gitApi, repositoryId, baseCheckPath, project, baseCommitSha);
-                        if (baseContent) {
-                            output += `    == ORIGINAL CONTENT (Commit: ${baseCommitSha.substring(0, 7)}) ==\n`;
-                            output += `    ------------------------\n`;
-                            output += baseContent.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n";
-                            output += `    ------------------------\n\n`;
-                        } else {
-                            output += `    INFO: Original content not found at commit ${baseCommitSha.substring(0, 7)} (likely added in this PR).\n\n`;
-                        }
                     } catch (err: any) {
                         output += `    WARN: Could not fetch base content: ${err.message}\n\n`;
                     }
@@ -71,14 +64,6 @@ export async function formatPrChangesOutput(
                 if (targetCommitSha && currentPath) {
                     try {
                         targetContent = await getFileContent(gitApi, repositoryId, currentPath, project, targetCommitSha);
-                        if (targetContent) {
-                            output += `    == UPDATED CONTENT (Commit: ${targetCommitSha.substring(0, 7)}) ==\n`;
-                            output += `    ------------------------\n`;
-                            output += targetContent.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n";
-                            output += `    ------------------------\n\n`;
-                        } else {
-                            output += `    WARN: Could not fetch target content.\n\n`;
-                        }
                     } catch (err: any) {
                         output += `    WARN: Could not fetch target content: ${err.message}\n\n`;
                     }
@@ -86,37 +71,57 @@ export async function formatPrChangesOutput(
                     output += `    WARN: Could not determine target commit SHA.\n\n`;
                 }
 
-                // Generate diff output
+                // Generate diff output only if both contents are available
                 if (baseContent && targetContent) {
                     output += `    == DIFF ==\n`;
-                    output += `    (Diff generation logic not implemented)\n\n`; 
+                    const diffResult = generateSimpleDiff(baseContent, targetContent); // base is original, target is modified
+                    output += diffResult.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n\n";
                 } else if (!baseContent && targetContent) {
+                    // Handle case where file was likely added and edited in the PR (only target exists)
                     output += `    == NEW CONTENT (File likely added and edited in PR) ==\n`;
                     output += `    ------------------------\n`;
                     output += targetContent.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n";
                     output += `    ------------------------\n\n`;
+                } else if (baseContent && !targetContent) {
+                    // Handle case where file might have been edited then deleted? Unlikely but possible.
+                     output += `    WARN: Original content found but updated content is missing.\n`;
+                } else {
+                     // Only add warning if we intended to show a diff but couldn't fetch either file
+                     if (baseCommitSha || targetCommitSha) { // Check if we expected content
+                        output += `    WARN: Could not fetch content to generate diff.\n`;
+                     }
                 }
 
             } else if (changeTypeName.toLowerCase().includes("add")) {
                 output += `  --> Showing new file content...\n`;
                 
                 // Get added file content
-                if (targetCommitSha && currentPath) {
+                if (targetCommitSha && currentPath && sourceBranch) { // Ensure sourceBranch is available
                     try {
-                        const content = await getFileContent(gitApi, repositoryId, currentPath, project, targetCommitSha);
-                        if (content) {
+                        // Pass isNewFile=true and the sourceBranch to handle new files
+                        const content = await getFileContent(gitApi, repositoryId, currentPath, project, targetCommitSha, true, sourceBranch);
+                        
+                        // Check if the content starts with "Error:" which indicates an issue
+                        if (content.startsWith("Error:")) {
+                            output += `    WARNING: ${content}\n`;
+                        } else if (content) {
                             output += `    == NEW FILE CONTENT (Commit: ${targetCommitSha.substring(0, 7)}) ==\n`;
                             output += `    ------------------------\n`;
                             output += content.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n";
                             output += `    ------------------------\n`;
                         } else {
-                            output += `    WARN: Could not fetch new file content.\n`;
+                            output += `    WARN: Could not fetch content for this new file.\n`;
+                            output += `    This is likely because the file was just added in the PR and\n`;
+                            output += `    the Azure DevOps API cannot access it directly.\n`;
+                            output += `    Please view this file in the Azure DevOps web interface.\n`;
                         }
                     } catch (err: any) {
                         output += `    WARN: Could not fetch new file content: ${err.message}\n`;
                     }
                 } else if (!targetCommitSha) {
                     output += `    WARN: Could not determine target commit SHA.\n\n`;
+                } else if (!sourceBranch) {
+                    output += `    WARN: Could not determine source branch for fetching new file.\n\n`;
                 }
             } else if (changeTypeName.toLowerCase().includes("delete")) {
                 output += `  --> Showing deleted file content...\n`;
