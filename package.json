@@ -1,0 +1,26 @@
+{
+  "name": "gitstuffserver",
+  "description": "MCP server to generate git merge diffs",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "git-diff-server": "./build/index.js"
+  },
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "npm run build && node build/index.js"
+  },
+  "keywords": [],
+  "author": "Jakub",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}
