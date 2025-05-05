@@ -10,7 +10,7 @@ import util from 'util';
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 // --- Configuration ---
-const SERVER_NAME = "git_diff_generator";
+const SERVER_NAME = "GitStuffServer";
 const SCRIPT_NAME = "GenerateMergeDiff.ps1"; // Name of the PowerShell script
 const OUTPUT_DIFF_FILE = "merge_changes.diff"; // Name of the file the script creates
 
