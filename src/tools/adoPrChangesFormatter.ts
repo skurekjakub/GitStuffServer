@@ -16,7 +16,7 @@ export async function formatPrChangesOutput(
     iterationChanges: GitInterfaces.GitPullRequestIterationChanges,
     latestIteration: GitInterfaces.GitPullRequestIteration
 ): Promise<string> {
-    let output = `Changes for PR #${pullRequestId} (TARGET BRANCH:${targetBranch} SOURCE BRANCH:${sourceBranch}):\n\n`;
+    let output = `Changes for PR #${pullRequestId} (TARGET BRANCH:${targetBranch} SOURCE BRANCH:${sourceBranch}) (UPDATED):\n\n`;
 
     if (!iterationChanges?.changeEntries || iterationChanges.changeEntries.length === 0) {
         return "No changes found in the latest PR iteration.";
@@ -74,7 +74,7 @@ export async function formatPrChangesOutput(
                 // Generate diff output only if both contents are available
                 if (baseContent && targetContent) {
                     output += `    == DIFF ==\n`;
-                    const diffResult = generateSimpleDiff(baseContent, targetContent); // base is original, target is modified
+                    const diffResult = generateSimpleDiff(baseContent, targetContent); // target is original, base is modified (source branch)
                     output += diffResult.split("\n").map((line: string) => `    ${line}`).join("\n") + "\n\n";
                 } else if (!baseContent && targetContent) {
                     // Handle case where file was likely added and edited in the PR (only target exists)
@@ -148,8 +148,8 @@ export async function formatPrChangesOutput(
         } catch (err: any) {
             output += `    ERROR processing change for ${originalPath}: ${err.message}\n\n`;
         }
-        output += "\n"; 
+        output += "\n";
     }
-
+    console.log(output);
     return output;
 }

@@ -6,6 +6,7 @@ import os from "os";
 import util from 'util';
 import path from "path";
 import { fileURLToPath } from 'url';
+import * as diffLib from 'diff';
 // --- Configuration ---
 export const SERVER_NAME = "GitStuffServer";
 export const SCRIPT_NAME = "GenerateMergeDiff.ps1";
@@ -190,60 +191,14 @@ export async function streamToString(stream) {
     });
 }
 /**
- * Generates a simple line-by-line diff between two strings.
+ * Generates a line-by-line diff between two strings using the diff library.
  * @param originalContent The original string content.
  * @param modifiedContent The modified string content.
  * @returns A string representing the diff, with + for additions and - for deletions.
  */
 export function generateSimpleDiff(modifiedContent, originalContent) {
-    const originalLines = originalContent.split('\n');
-    const modifiedLines = modifiedContent.split('\n');
-    const diffLines = [];
-    const maxLen = Math.max(originalLines.length, modifiedLines.length);
-    let originalIndex = 0;
-    let modifiedIndex = 0;
-    // Basic line comparison (not a sophisticated diff algorithm)
-    while (originalIndex < originalLines.length || modifiedIndex < modifiedLines.length) {
-        const originalLine = originalLines[originalIndex];
-        const modifiedLine = modifiedLines[modifiedIndex];
-        if (originalIndex < originalLines.length && modifiedIndex < modifiedLines.length) {
-            if (originalLine === modifiedLine) {
-                diffLines.push(`  ${originalLine}`); // Unchanged
-                originalIndex++;
-                modifiedIndex++;
-            }
-            else {
-                // Check if line was potentially deleted
-                const nextModifiedLine = modifiedLines[modifiedIndex + 1];
-                if (originalLine === nextModifiedLine) {
-                    diffLines.push(`+ ${modifiedLine}`); // Added
-                    modifiedIndex++;
-                }
-                // Check if line was potentially added
-                else {
-                    const nextOriginalLine = originalLines[originalIndex + 1];
-                    if (modifiedLine === nextOriginalLine) {
-                        diffLines.push(`- ${originalLine}`); // Deleted
-                        originalIndex++;
-                    }
-                    else {
-                        // Assume modified
-                        diffLines.push(`- ${originalLine}`);
-                        diffLines.push(`+ ${modifiedLine}`);
-                        originalIndex++;
-                        modifiedIndex++;
-                    }
-                }
-            }
-        }
-        else if (originalIndex < originalLines.length) {
-            diffLines.push(`- ${originalLine}`); // Deleted
-            originalIndex++;
-        }
-        else if (modifiedIndex < modifiedLines.length) {
-            diffLines.push(`+ ${modifiedLine}`); // Added
-            modifiedIndex++;
-        }
-    }
+    const diffResult = diffLib.createPatch('file', originalContent, modifiedContent, 'original', 'modified');
+    // Remove the header lines (first 4 lines) for a cleaner output
+    const diffLines = diffResult.split('\n').slice(4);
     return diffLines.join('\n');
 }
