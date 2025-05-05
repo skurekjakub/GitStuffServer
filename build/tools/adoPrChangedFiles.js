@@ -21,6 +21,7 @@ export async function adoPrChangedFilesHandler({ pullRequestId: providedPrId, or
     const pullRequestId = providedPrId || config.defaultPullRequestId;
     const pat = config.pat;
     console.error(`[Tool] 'get_ado_pr_changed_files' called for PR #${pullRequestId} in ${organization}/${project}/${repository}`);
+    console.error(`[Tool] Always showing diffs`);
     // Validate required parameters
     if (!organization) {
         const errorMsg = `Error: Azure DevOps organization not provided. Please specify it in the tool parameters, in ado_config.json${providedOrgId ? ` (organizations.${providedOrgId})` : ' (default)'}, or set the ${providedOrgId ? `ADO_${providedOrgId.toUpperCase()}_ORG` : 'ADO_ORG'} environment variable.`;

@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
     "outDir": "./build",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-     // Add this if you haven't already to allow top-level await
+    // Add this if you haven't already to allow top-level await
     "lib": ["ES2022"]
   },
   "include": ["src/**/*"],

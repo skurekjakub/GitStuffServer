@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SERVER_NAME } from "./utils/utilities.js";
 import { gitMergeDiffSchema, gitMergeDiffHandler } from "./tools/gitMergeDiff.js";
-import { adoPrChangedFilesSchema, adoPrChangedFilesHandler } from "./tools/adoPrChangedFiles.js";
+import { adoPrChangesSchema, adoPrChangesHandler } from "./tools/adoPrChanges.js";
 // --- Configuration log output ---
 console.error(`[Config] Server Name: ${SERVER_NAME}`);
 // ---------------------
@@ -18,8 +18,9 @@ const server = new McpServer({
 });
 // Register the git merge diff tool
 server.tool("get_git_merge_diff", "Generates the text diff for a Git merge commit against its first parent within a specified local repository.", gitMergeDiffSchema, gitMergeDiffHandler);
-// Register the ADO PR changed files tool
-server.tool("get_ado_pr_changed_files", "Fetches the list of changed files from the latest iteration of an Azure DevOps Pull Request using a PowerShell script.", adoPrChangedFilesSchema, adoPrChangedFilesHandler);
+// Register the new ADO PR changes tool (TypeScript-based)
+server.tool("get_ado_pr_changes", "Fetches changes from an Azure DevOps Pull Request with full diff content using the Azure DevOps Node API.", adoPrChangesSchema.shape, // Use .shape here
+adoPrChangesHandler);
 // --- Main Server Execution ---
 async function main() {
     const transport = new StdioServerTransport();
