@@ -11,7 +11,7 @@ import util from 'util';
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 // --- Configuration ---
-const SERVER_NAME = "git_diff_generator";
+const SERVER_NAME = "GitStuffServer";
 const SCRIPT_NAME = "GenerateMergeDiff.ps1";
 const OUTPUT_DIFF_FILE = "merge_changes.diff";
 const __filename = fileURLToPath(import.meta.url);
