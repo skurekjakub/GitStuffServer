@@ -1,7 +1,33 @@
 {
-  "pat": "your_personal_access_token_here",
-  "organization": "your_azure_devops_organization",
-  "project": "your_azure_devops_project",
-  "repository": "your_azure_devops_repository",
-  "defaultPullRequestId": "optional_default_pr_id"
+  "// --- INSTRUCTIONS ---": "This is a sample file. To use it, create a copy named 'ado_config.json' and fill in your values.",
+  "// --- URL PATTERN ---": "https://dev.azure.com/{organization}/{project}/_git/{repository}/pullrequest/{pullRequestId}",
+  "// Delete all comment lines (starting with //) when creating your actual configuration file": "",
+
+  "default": {
+    "// Settings to use when no organizationId is specified": "",
+    "pat": "your_personal_access_token_here",
+    "organization": "your_default_azure_devops_organization",
+    "project": "your_default_azure_devops_project", 
+    "repository": "your_default_azure_devops_repository",
+    "defaultPullRequestId": "optional_default_pr_id"
+  },
+  
+  "organizations": {
+    "org1": {
+      "// Example URL": "https://dev.azure.com/org1_azure_devops_organization/org1_azure_devops_project/_git/org1_azure_devops_repository/pullrequest/123",
+      "pat": "org1_personal_access_token_here",
+      "organization": "org1_azure_devops_organization",
+      "project": "org1_azure_devops_project",
+      "repository": "org1_azure_devops_repository",
+      "defaultPullRequestId": "optional_org1_pr_id"
+    },
+    "org2": {
+      "// Example URL": "https://dev.azure.com/org2_azure_devops_organization/org2_azure_devops_project/_git/org2_azure_devops_repository/pullrequest/456",
+      "pat": "org2_personal_access_token_here",
+      "organization": "org2_azure_devops_organization",
+      "project": "org2_azure_devops_project",
+      "repository": "org2_azure_devops_repository",
+      "defaultPullRequestId": "optional_org2_pr_id"
+    }
+  }
 }

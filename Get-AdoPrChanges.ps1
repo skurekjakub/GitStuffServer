@@ -121,7 +121,8 @@ Write-Host "Fetching changes for iteration $latestIterationId..."
 try {
     $changesResponse = Invoke-RestMethod -Uri $changesUrl -Method Get -Headers $headers
 } catch {
-    Write-Error "Error fetching changes for iteration $latestIterationId: $($_.Exception.Message)"
+    $errorMsg = $_.Exception.Message
+    Write-Error "Error fetching changes for iteration ${latestIterationId}: ${errorMsg}"
     if ($_.Exception.Response) {
         $streamReader = [System.IO.StreamReader]::new($_.Exception.Response.GetResponseStream())
         $errorResponse = $streamReader.ReadToEnd()
