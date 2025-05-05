@@ -26,7 +26,7 @@ Defaults to $env:ADO_PR_ID if set.
 
 .PARAMETER PAT
 Your Azure DevOps Personal Access Token with 'Code (Read)' scope.
-Defaults to $env:ADO_PAT if set. This parameter is Mandatory if the environment variable is not set.
+Defaults to $env:ADO_PAT if set.
 
 .EXAMPLE
 .\Get-AdoPrChanges.ps1 -Organization "MyOrg" -Project "MyProject" -Repository "MyRepo" -PullRequestId 123 -PAT "your_pat_here"
@@ -54,7 +54,7 @@ param(
     [Parameter(Mandatory=$false)]
     [string]$PullRequestId = $env:ADO_PR_ID,
 
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory=$false)]
     [string]$PAT = $env:ADO_PAT
 )
 

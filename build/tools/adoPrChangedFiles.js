@@ -53,11 +53,11 @@ export async function adoPrChangedFilesHandler({ pullRequestId: providedPrId, or
         Organization: organization,
         Project: project,
         Repository: repository,
-        PullRequestId: pullRequestId
-        // PAT: pat // DO NOT PASS PAT AS ARGUMENT
+        PullRequestId: pullRequestId,
+        PAT: pat // Explicitly pass PAT as a parameter
     };
-    // Execute the script, passing the ADO_PAT via environment
-    const result = await runPowershellScript(ADO_PR_FILES_SCRIPT_PATH, scriptArgs, { ADO_PAT: pat } // Explicitly pass PAT in env for clarity, though script checks $env:ADO_PAT anyway
+    // Execute the script, passing the ADO_PAT via environment as well
+    const result = await runPowershellScript(ADO_PR_FILES_SCRIPT_PATH, scriptArgs, { ADO_PAT: pat } // Also pass PAT as environment variable for backward compatibility
     );
     if (!result.success) {
         // Handle script execution errors
