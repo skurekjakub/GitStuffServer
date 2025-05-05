@@ -2,7 +2,7 @@
 import { z } from "zod";
 import path from "path";
 import { readFile, unlink } from "fs/promises";
-import { runPowershellScript, OUTPUT_FILE_PATH, OUTPUT_DIFF_FILE } from "../utils/utilities.js";
+import { runPowershellScript, OUTPUT_FILE_PATH, OUTPUT_DIFF_FILE, SCRIPT_PATH } from "../utils/utilities.js";
 // Tool schema definition
 export const gitMergeDiffSchema = {
     commitHash: z.string().min(6).regex(/^[a-fA-F0-9]+$/, "Must be a valid hex commit hash")
@@ -19,7 +19,13 @@ export async function gitMergeDiffHandler({ commitHash, repoPath }) {
         console.error(`[Tool] Validation Failed: ${message}`);
         return { content: [{ type: "text", text: message }] };
     }
-    const { success, stdout: scriptStdout, stderr: scriptStderr, errorMessage, code } = await runPowershellScript(commitHash, repoPath);
+    // Prepare arguments for the PowerShell script
+    const scriptArgs = {
+        CommitHash: commitHash,
+        RepoPath: repoPath
+    };
+    // Execute the script with the new calling approach
+    const { success, stdout: scriptStdout, stderr: scriptStderr, errorMessage, code } = await runPowershellScript(SCRIPT_PATH, scriptArgs);
     if (!success) {
         console.error(`[Tool] Script execution failed. Code: ${code}. Error: ${errorMessage}`);
         // Make error message slightly more user-friendly

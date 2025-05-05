@@ -3,7 +3,8 @@ import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { 
   runPowershellScript,
-  ADO_PR_FILES_SCRIPT_PATH
+  ADO_PR_FILES_SCRIPT_PATH,
+  getAdoConfig
 } from "../utils/utilities.js";
 
 // Tool schema definition
@@ -16,29 +17,61 @@ export const adoPrChangedFilesSchema = {
 
 // Tool handler implementation
 export async function adoPrChangedFilesHandler({ 
-  organization, 
-  project, 
-  repository, 
-  pullRequestId 
+  organization: providedOrg, 
+  project: providedProj, 
+  repository: providedRepo, 
+  pullRequestId: providedPrId 
 }: {
   organization: string;
   project: string;
   repository: string;
   pullRequestId: string;
 }): Promise<CallToolResult> {
+  // First get configuration from environment and files
+  const config = await getAdoConfig();
+
+  // Use provided values or fall back to configuration
+  const organization = providedOrg || config.organization;
+  const project = providedProj || config.project;
+  const repository = providedRepo || config.repository;
+  const pullRequestId = providedPrId || config.defaultPullRequestId;
+  const pat = config.pat;
+
   console.error(`[Tool] 'get_ado_pr_changed_files' called for PR #${pullRequestId} in ${organization}/${project}/${repository}`);
 
-  const pat = process.env.ADO_PAT; // Read PAT from environment variable set by VS Code MCP config
+  // Validate required parameters
+  if (!organization) {
+    const errorMsg = "Error: Azure DevOps organization not provided. Please specify it in the tool parameters, in ado_config.json, or set the ADO_ORG environment variable.";
+    console.error(`[Tool] Missing parameter: ${errorMsg}`);
+    return { content: [{ type: "text", text: errorMsg }] };
+  }
+
+  if (!project) {
+    const errorMsg = "Error: Azure DevOps project not provided. Please specify it in the tool parameters, in ado_config.json, or set the ADO_PROJECT environment variable.";
+    console.error(`[Tool] Missing parameter: ${errorMsg}`);
+    return { content: [{ type: "text", text: errorMsg }] };
+  }
+
+  if (!repository) {
+    const errorMsg = "Error: Azure DevOps repository not provided. Please specify it in the tool parameters, in ado_config.json, or set the ADO_REPO environment variable.";
+    console.error(`[Tool] Missing parameter: ${errorMsg}`);
+    return { content: [{ type: "text", text: errorMsg }] };
+  }
+
+  if (!pullRequestId) {
+    const errorMsg = "Error: Pull Request ID not provided. Please specify it in the tool parameters, in ado_config.json, or set the ADO_PR_ID environment variable.";
+    console.error(`[Tool] Missing parameter: ${errorMsg}`);
+    return { content: [{ type: "text", text: errorMsg }] };
+  }
 
   if (!pat) {
-    // Check if PAT is missing from environment
-    const errorMsg = "Error: ADO_PAT environment variable is not set. Cannot authenticate ADO script. Configure it via MCP inputs/env in VS Code settings.";
+    // Check if PAT is missing
+    const errorMsg = "Error: ADO Personal Access Token (PAT) not found. Please set the ADO_PAT environment variable or add it to ado_config.json.";
     console.error(`[Tool] Auth Error: ${errorMsg}`);
     return { content: [{ type: "text", text: errorMsg }] };
   }
 
   // Prepare arguments for the PowerShell script
-  // The PAT is intentionally NOT passed here; the script reads it from the environment.
   const scriptArgs = {
     Organization: organization,
     Project: project,

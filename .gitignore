@@ -1,1 +1,14 @@
 node_modules
+build
+# Exclude ADO configuration file but keep the sample
+ado_config.json
+!ado_config.json.sample
+# Exclude common IDE/editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea
+*.swp
+*.swo
+.DS_Store

@@ -1,0 +1,7 @@
+{
+  "pat": "your_personal_access_token_here",
+  "organization": "your_azure_devops_organization",
+  "project": "your_azure_devops_project",
+  "repository": "your_azure_devops_repository",
+  "defaultPullRequestId": "optional_default_pr_id"
+}
