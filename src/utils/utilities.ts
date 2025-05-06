@@ -170,7 +170,6 @@ export async function runPowershellScript(
     // Prepare PowerShell arguments
     const psArgs = [
         "-ExecutionPolicy", "Bypass",
-        "-NoProfile",
         "-File", scriptPath
     ];
     

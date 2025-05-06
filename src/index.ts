@@ -21,7 +21,7 @@ const server = new McpServer({
 
 // Register the git merge diff tool
 server.tool(
-  "get_git_merge_diff",
+  "git_merge_diff",
   "Generates the text diff for a Git merge commit against its first parent within a specified local repository.",
   gitMergeDiffSchema,
   gitMergeDiffHandler
@@ -29,7 +29,7 @@ server.tool(
 
 // Register the new ADO PR changes tool (TypeScript-based)
 server.tool(
-  "get_ado_pr_changes", 
+  "ado_pr_changes", 
   "Fetches changes from an Azure DevOps Pull Request with full diff content using the Azure DevOps Node API.",
   adoPrChangesSchema.shape, // Use .shape here
   adoPrChangesHandler

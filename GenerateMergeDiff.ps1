@@ -52,15 +52,11 @@ if (-not (Test-Path -Path $RepoPath -PathType Container)) {
     Write-Error "Error: Repository path '$RepoPath' does not exist or is not a directory."
     exit 1 # Exit with a non-zero code
 }
-# Basic check for .git directory - not foolproof but a good hint
-if (-not (Test-Path -Path (Join-Path -Path $RepoPath -ChildPath ".git") )) {
-     Write-Warning "Warning: Could not find a '.git' subdirectory in '$RepoPath'. Ensure this is a valid Git repository root."
-     # Continue execution, git command will fail if it's not a repo
-}
+Set-Alias -Name git -Value "C:\Program Files\Git\cmd\git.exe"
 
 # --- Command Execution ---
 # Use 'git -C <path>' to run the command within the specified repository context
-$GitCommand = "git -C `"$RepoPath`" show -m --first-parent $CommitHash" # Use backticks for quotes if path has spaces
+$GitCommand = "git --no-pager -C `"$RepoPath`" show -m --first-parent $CommitHash" # Use backticks for quotes if path has spaces
 
 Write-Host "Running command in context of '$RepoPath': $GitCommand"
 Write-Host "Output will be saved to: $FullOutputPath (relative to current CWD)"
@@ -70,7 +66,7 @@ try {
     # Using UTF8 encoding is generally recommended for diff files.
     # Use Invoke-Expression to handle the command string with potential quotes in paths
     Invoke-Expression "$GitCommand *>&1" | Set-Content -Path $OutputFileName -Encoding UTF8 -Force
-
+    
     # Check the exit code of the last external command (git)
     # Note: $LASTEXITCODE reflects Invoke-Expression's success, which might mask git's exit code if redirection fails early.
     # A slightly more robust way might involve temporary files or Start-Process, but this is usually sufficient.
