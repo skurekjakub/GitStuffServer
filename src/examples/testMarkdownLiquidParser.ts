@@ -4,7 +4,7 @@ import { Node } from 'unist';
 import { LiquidNode } from '../parsers/markdownLiquid/types.js';
 
 async function testNestedLiquidParser() {
-  // Example with nested Liquid structures
+  // Example with nested Liquid structures - simplified for clearer diagnostics
   const content = `
 # Markdown with Liquid Example
 
@@ -20,7 +20,7 @@ My favorite food is {{ favorite_food }}.
 {% if customer %}
   ## Welcome, {{ customer.name }}!
   {% if customer.orders.size > 0 %}
-  sd
+    You've placed {{ customer.orders.size }} orders with us.
   {% else %}
     You haven't placed any orders yet.
   {% endif %}
@@ -31,7 +31,15 @@ My favorite food is {{ favorite_food }}.
 
 ## Nested for loops
 {% for collection in collections %}
-sd
+  ### {{ collection.title }}
+  {% for product in collection.products limit: 3 %}
+    - {{ product.title }} - {{ product.price | money }}
+    {% if product.available %}
+      - In stock
+    {% else %}
+      - Sold out
+    {% endif %}
+  {% endfor %}
 {% endfor %}
 `;
 
@@ -46,11 +54,9 @@ sd
       liquidExpressions: [] as string[],
       liquidTags: [] as string[],
       blockStructures: [] as any[],
-      parseErrors: [] as string[]
+      parseErrors: [] as string[],
+      allLiquidNodes: [] as LiquidNode[]
     };
-    
-    // Collect all liquid tag nodes for block analysis
-    const liquidTagNodes: LiquidNode[] = [];
     
     // Visit AST to gather information
     visit(ast, (node: Node) => {
@@ -60,11 +66,11 @@ sd
       
       if (node.type === 'liquidExpression' || node.type === 'liquidTag') {
         const liquidNode = node as LiquidNode;
+        summary.allLiquidNodes.push(liquidNode);
         
         if (node.type === 'liquidExpression') {
           summary.liquidExpressions.push(liquidNode.liquidInnerContent || liquidNode.liquidContent);
         } else { // liquidTag
-          liquidTagNodes.push(liquidNode);
           summary.liquidTags.push(liquidNode.liquidInnerContent || liquidNode.liquidContent);
         }
         
@@ -80,7 +86,7 @@ sd
     });
     
     // Analyze block structures
-    analyzeBlockStructures(liquidTagNodes, summary.blockStructures);
+    analyzeBlockStructures(summary.allLiquidNodes.filter(n => n.type === 'liquidTag'), summary.blockStructures);
     
     // Print summary
     console.log("=== AST Summary ===");
@@ -150,7 +156,7 @@ function analyzeBlockStructures(liquidTagNodes: LiquidNode[], blockStructures: a
     end?: LiquidNode 
   }> = {};
   
-  // Collect nodes by blockId
+  // First pass: collect all blocks by ID
   for (const node of liquidTagNodes) {
     const blockId = node.blockId;
     if (!blockId) continue;
@@ -160,7 +166,7 @@ function analyzeBlockStructures(liquidTagNodes: LiquidNode[], blockStructures: a
     
     if (!blockMap[blockId]) {
       blockMap[blockId] = {
-        start: ast.isBlockStart ? node : undefined as any,
+        start: undefined as any,
         continuations: [],
         end: undefined
       };

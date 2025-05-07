@@ -3,17 +3,24 @@
  */
 import { Liquid } from 'liquidjs';
 import { LiquidNode } from './types.js';
-import { 
-  extractTagName, 
-  isBlockStartTag, 
-  isContinuationOrEndTag 
-} from './tagClassifier.js';
+import { extractTagName } from './tagClassifier.js';
 
 // Create Liquid instance with lenient error handling for tags
 const liquidEngine = new Liquid({
   strictVariables: false,
   strictFilters: false
 });
+
+// Block and continuation tag definitions
+const BLOCK_TAGS = [
+  'if', 'unless', 'for', 'case', 'capture', 'tablerow', 
+  'raw', 'block', 'paginate', 'schema', 'style', 'form'
+];
+
+const CONTINUATION_TAGS = [
+  'else', 'elsif', 'elseif', 'when', 'empty',
+  'endcase', 'endform', 'endpaginate', 'endblock'
+];
 
 /**
  * Process a Liquid tag node ({% ... %})
@@ -34,22 +41,23 @@ export function processTag(node: LiquidNode): void {
   const innerContent = node.liquidInnerContent || '';
   const tagName = extractTagName(innerContent);
   
-  // Create a simplified AST representation
+  // Create a comprehensive AST representation
   node.liquidAST = {
     type: 'tag',
     tagName: tagName,
     isBlockStart: isBlockStartTag(tagName),
-    isBlockEnd: tagName.startsWith('end'),
-    isContinuation: isContinuationOrEndTag(tagName) && !tagName.startsWith('end'),
+    isBlockEnd: isBlockEndTag(tagName),
+    isContinuation: isContinuationTag(tagName),
     content: innerContent,
   };
   
-  // For simple tags (not block tags), try to parse with LiquidJS
-  if (!isBlockStartTag(tagName) && !isContinuationOrEndTag(tagName)) {
+  // For simple tags (not block tags or related), try to parse with LiquidJS
+  if (!isBlockStartTag(tagName) && !isBlockEndTag(tagName) && !isContinuationTag(tagName)) {
     tryParseSimpleTag(node, innerContent);
   } else {
-    // Mark block tags with appropriate messages
-    addBlockTagMessage(node, tagName);
+    // Mark block-related tags as successfully processed
+    // (block association will be handled by the block associator)
+    node.parseSuccess = true;
   }
 }
 
@@ -68,14 +76,22 @@ function tryParseSimpleTag(node: LiquidNode, innerContent: string): void {
 }
 
 /**
- * Add appropriate message for block and continuation tags
+ * Check if a tag is a block start tag
  */
-function addBlockTagMessage(node: LiquidNode, tagName: string): void {
-  node.parseSuccess = false;
-  
-  if (isBlockStartTag(tagName)) {
-    node.parseError = `Block tag '${tagName}' requires a matching 'end${tagName}' tag`;
-  } else if (isContinuationOrEndTag(tagName)) {
-    node.parseError = `Tag '${tagName}' is part of a block structure`;
-  }
+function isBlockStartTag(tagName: string): boolean {
+  return BLOCK_TAGS.includes(tagName);
+}
+
+/**
+ * Check if a tag is a block end tag
+ */
+function isBlockEndTag(tagName: string): boolean {
+  return tagName.startsWith('end') && BLOCK_TAGS.includes(tagName.substring(3));
+}
+
+/**
+ * Check if a tag is a continuation tag
+ */
+function isContinuationTag(tagName: string): boolean {
+  return CONTINUATION_TAGS.includes(tagName);
 }
