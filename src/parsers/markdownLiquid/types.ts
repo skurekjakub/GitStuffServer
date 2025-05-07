@@ -5,11 +5,16 @@ export interface LiquidNode extends Node {
   liquidContent: string;
   liquidAST?: any; // To store the AST from liquidjs
   
-  // New fields for better error handling and content processing
+  // Node content processing
   originalContent?: string; // The original Liquid content before processing
   liquidInnerContent?: string; // The content without {{ }} or {% %} delimiters
   parseSuccess?: boolean; // Whether parsing succeeded
   parseError?: string; // Error message if parsing failed
+  
+  // Block structure association
+  blockId?: string; // ID for this block (for start tags) or reference to parent block (for continuation/end)
+  matchingBlockId?: string; // For end tags, reference to the start tag's blockId
+  relatedBlockNodes?: LiquidNode[]; // Related nodes in the same block structure
 }
 
 export interface LiquidExpressionNode extends LiquidNode {

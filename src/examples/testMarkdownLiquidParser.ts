@@ -20,10 +20,7 @@ My favorite food is {{ favorite_food }}.
 {% if customer %}
   ## Welcome, {{ customer.name }}!
   {% if customer.orders.size > 0 %}
-    You've placed {{ customer.orders.size }} orders with us.
-    {% if customer.orders.last.created_at > 30.days.ago %}
-      Your last order was placed recently.
-    {% endif %}
+  sd
   {% else %}
     You haven't placed any orders yet.
   {% endif %}
@@ -34,15 +31,7 @@ My favorite food is {{ favorite_food }}.
 
 ## Nested for loops
 {% for collection in collections %}
-  ### {{ collection.title }}
-  {% for product in collection.products limit: 3 %}
-    - {{ product.title }} - {{ product.price | money }}
-    {% if product.available %}
-      - In stock
-    {% else %}
-      - Sold out
-    {% endif %}
-  {% endfor %}
+sd
 {% endfor %}
 `;
 
@@ -56,8 +45,12 @@ My favorite food is {{ favorite_food }}.
       nodeTypes: {} as Record<string, number>,
       liquidExpressions: [] as string[],
       liquidTags: [] as string[],
+      blockStructures: [] as any[],
       parseErrors: [] as string[]
     };
+    
+    // Collect all liquid tag nodes for block analysis
+    const liquidTagNodes: LiquidNode[] = [];
     
     // Visit AST to gather information
     visit(ast, (node: Node) => {
@@ -71,12 +64,13 @@ My favorite food is {{ favorite_food }}.
         if (node.type === 'liquidExpression') {
           summary.liquidExpressions.push(liquidNode.liquidInnerContent || liquidNode.liquidContent);
         } else { // liquidTag
+          liquidTagNodes.push(liquidNode);
           summary.liquidTags.push(liquidNode.liquidInnerContent || liquidNode.liquidContent);
         }
         
         if (liquidNode.parseError) {
           summary.parseErrors.push(
-            `Failed to parse ${node.type}: ${liquidNode.liquidContent}\n` +
+            `${node.type}: ${liquidNode.liquidContent}\n` +
             `Error: ${liquidNode.parseError}`
           );
         }
@@ -84,6 +78,9 @@ My favorite food is {{ favorite_food }}.
       
       return true;
     });
+    
+    // Analyze block structures
+    analyzeBlockStructures(liquidTagNodes, summary.blockStructures);
     
     // Print summary
     console.log("=== AST Summary ===");
@@ -105,10 +102,28 @@ My favorite food is {{ favorite_food }}.
       console.log(`${i + 1}. ${displayTag}`);
     });
     
+    console.log("\n=== Block Structures ===");
+    summary.blockStructures.forEach((block, i) => {
+      console.log(`Block ${i+1}: ${block.type} (ID: ${block.id})`);
+      console.log(`  Start: ${block.start}`);
+      if (block.continuations.length > 0) {
+        console.log(`  Continuations:`);
+        block.continuations.forEach((cont: string) => {
+          console.log(`    - ${cont}`);
+        });
+      }
+      if (block.end) {
+        console.log(`  End: ${block.end}`);
+      } else {
+        console.log(`  End: <missing>`);
+      }
+      console.log('');
+    });
+    
     if (summary.parseErrors.length > 0) {
-      console.log("\n=== Parse Errors ===");
+      console.log("\n=== Parse Messages ===");
       summary.parseErrors.forEach((err, i) => {
-        console.log(`Error ${i + 1}:\n${err}\n`);
+        console.log(`Message ${i + 1}:\n${err}\n`);
       });
     } else {
       console.log("\nNo parse errors detected!");
@@ -122,6 +137,63 @@ My favorite food is {{ favorite_food }}.
   } catch (error) {
     console.error("Failed to parse the Markdown/Liquid content:", error);
   }
+}
+
+/**
+ * Analyze and summarize block structures from liquidTagNodes
+ */
+function analyzeBlockStructures(liquidTagNodes: LiquidNode[], blockStructures: any[]): void {
+  // Create a map of blockIds to help group nodes
+  const blockMap: Record<string, { 
+    start: LiquidNode, 
+    continuations: LiquidNode[],
+    end?: LiquidNode 
+  }> = {};
+  
+  // Collect nodes by blockId
+  for (const node of liquidTagNodes) {
+    const blockId = node.blockId;
+    if (!blockId) continue;
+    
+    const ast = node.liquidAST;
+    if (!ast) continue;
+    
+    if (!blockMap[blockId]) {
+      blockMap[blockId] = {
+        start: ast.isBlockStart ? node : undefined as any,
+        continuations: [],
+        end: undefined
+      };
+    }
+    
+    if (ast.isBlockStart) {
+      blockMap[blockId].start = node;
+    } else if (ast.isBlockEnd) {
+      blockMap[blockId].end = node;
+    } else if (ast.isContinuation) {
+      blockMap[blockId].continuations.push(node);
+    }
+  }
+  
+  // Convert block map to array format for display
+  Object.entries(blockMap).forEach(([blockId, blockData]) => {
+    // Only add blocks that have a start tag
+    if (blockData.start) {
+      const startAst = blockData.start.liquidAST;
+      const blockType = startAst?.tagName || 'unknown';
+      
+      blockStructures.push({
+        id: blockId,
+        type: blockType,
+        start: blockData.start.liquidContent,
+        continuations: blockData.continuations.map(node => node.liquidContent),
+        end: blockData.end?.liquidContent || null
+      });
+    }
+  });
+  
+  // Sort blocks by ID for consistent display
+  blockStructures.sort((a, b) => a.id.localeCompare(b.id));
 }
 
 // Run the test function
