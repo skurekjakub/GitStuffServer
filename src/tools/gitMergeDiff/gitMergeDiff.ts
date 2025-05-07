@@ -1,4 +1,4 @@
-// src/tools/gitMergeDiff.ts
+// src/tools/gitMergeDiff/gitMergeDiff.ts
 import { z } from "zod";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import path from "path";
@@ -8,7 +8,7 @@ import {
   OUTPUT_FILE_PATH,
   OUTPUT_DIFF_FILE,
   SCRIPT_PATH
-} from "../utils/utilities.js";
+} from "../../utils/utilities.js";
 
 // Tool schema definition
 export const gitMergeDiffSchema = {

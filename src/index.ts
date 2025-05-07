@@ -2,8 +2,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SERVER_NAME } from "./utils/utilities.js";
-import { gitMergeDiffSchema, gitMergeDiffHandler } from "./tools/gitMergeDiff.js";
-import { adoPrChangesSchema, adoPrChangesHandler } from "./tools/adoPrChanges.js";
+import { gitMergeDiffSchema, gitMergeDiffHandler } from "./tools/gitMergeDiff/gitMergeDiff.js";
+import { adoPrChangesSchema, adoPrChangesHandler } from "./tools/adoPrChanges/adoPrChanges.js";
+import adoPrCommentTool from "./tools/adoPrComment/adoPrComment.js";
+import { AdoPrCommentRequestSchema, AdoPrCommentResponse } from "./tools/adoPrComment/adoPrCommentSchema.js";
 
 // --- Configuration log output ---
 console.error(`[Config] Server Name: ${SERVER_NAME}`);
@@ -33,6 +35,14 @@ server.tool(
   "Fetches changes from an Azure DevOps Pull Request with full diff content using the Azure DevOps Node API.",
   adoPrChangesSchema.shape, // Use .shape here
   adoPrChangesHandler
+);
+
+// Register the new ADO PR comment tool
+server.tool(
+  "ado_pr_comment",
+  "Posts a comment to an Azure DevOps Pull Request. Can reply to existing threads or create new ones.",
+  AdoPrCommentRequestSchema.shape, // Use .shape here for Zod schema
+  adoPrCommentTool
 );
 
 // --- Main Server Execution ---

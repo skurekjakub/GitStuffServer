@@ -52,7 +52,6 @@ if (-not (Test-Path -Path $RepoPath -PathType Container)) {
     Write-Error "Error: Repository path '$RepoPath' does not exist or is not a directory."
     exit 1 # Exit with a non-zero code
 }
-Set-Alias -Name git -Value "C:\Program Files\Git\cmd\git.exe"
 
 # --- Command Execution ---
 # Use 'git -C <path>' to run the command within the specified repository context

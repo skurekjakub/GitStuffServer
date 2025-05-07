@@ -1,7 +1,8 @@
+// src/tools/adoPrChanges/adoPrChangesService.ts
 import * as azdev from "azure-devops-node-api";
 import { GitApi } from "azure-devops-node-api/GitApi.js";
 import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.js";
-import { getAdoConfig, streamToString } from "../utils/utilities.js";
+import { getAdoConfig, streamToString } from "../../utils/utilities.js";
 import { TestRunOutcome } from "azure-devops-node-api/interfaces/TestInterfaces.js";
 
 /**

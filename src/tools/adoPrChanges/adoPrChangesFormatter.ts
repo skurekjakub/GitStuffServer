@@ -1,7 +1,20 @@
+// src/tools/adoPrChanges/adoPrChangesFormatter.ts
 import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.js";
 import { GitApi } from "azure-devops-node-api/GitApi.js";
+// Adjusted import path for service assuming flat structure in build/tools
 import { getFileContent } from "./adoPrChangesService.js";
-import { generateSimpleDiff } from "../utils/utilities.js"; // Import the moved function
+import { generateSimpleDiff } from "../../utils/utilities.js";
+
+const MEDIA_EXTENSIONS = [
+    // Image extensions
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff', '.ico',
+    // Video extensions
+    '.mp4', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.webm', '.mpeg', '.mpg',
+    // Audio extensions
+    '.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a',
+    // Document/Binary (often large and not useful for diff)
+    '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.zip', '.tar', '.gz', '.rar', '.7z', '.exe', '.dll', '.so', '.dylib', '.bin', '.pkg', '.dmg'
+];
 
 /**
  * Formats the PR changes into a readable string output.
@@ -27,10 +40,18 @@ export async function formatPrChangesOutput(
             continue;
         }
 
-        const changeTypeEnumVal = change.changeType as GitInterfaces.VersionControlChangeType;
-        const changeTypeName = GitInterfaces.VersionControlChangeType[changeTypeEnumVal] || `Unknown (${change.changeType})`;
         const currentPath = change.item.path;
         const originalPath = change.sourceServerItem ?? currentPath;
+
+        // Check if the file extension is a media extension
+        const fileExtension = currentPath.substring(currentPath.lastIndexOf('.')).toLowerCase();
+        if (MEDIA_EXTENSIONS.includes(fileExtension)) {
+            output += `[SKIPPED_MEDIA] ${originalPath}\n\n`;
+            continue; // Skip processing for this media file
+        }
+
+        const changeTypeEnumVal = change.changeType as GitInterfaces.VersionControlChangeType;
+        const changeTypeName = GitInterfaces.VersionControlChangeType[changeTypeEnumVal] || `Unknown (${change.changeType})`;
         
         output += `[${changeTypeName}] ${originalPath}`;
         if (changeTypeName.toLowerCase().includes("rename")) {
