@@ -1,5 +1,5 @@
 // Export the main parser function
-export { parseMarkdownLiquid } from '../../utils/markdownLiquidParser.js';
+export { parseMarkdownLiquid } from '../markdownLiquidParser.js';
 
 // Export types
 export * from './types.js';

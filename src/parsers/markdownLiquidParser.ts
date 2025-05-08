@@ -1,8 +1,8 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import { Node } from 'unist';
-import { remarkLiquid } from '../parsers/markdownLiquid/remarkLiquidPlugin.js';
-import { processLiquidNodes } from '../parsers/markdownLiquid/liquidAstProcessor.js';
+import { remarkLiquid } from './markdownLiquid/remarkLiquidPlugin.js';
+import { processLiquidNodes } from './markdownLiquid/liquidAstProcessor.js';
 
 export async function parseMarkdownLiquid(markdownContent: string): Promise<Node> {
   const processor = unified()
