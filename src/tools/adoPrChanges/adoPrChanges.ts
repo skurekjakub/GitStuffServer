@@ -1,6 +1,6 @@
 // src/tools/adoPrChanges/adoPrChanges.ts
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { getAdoConfig } from "../../utils/utilities.js";
+import { getAdoConfig } from "../../utils/configManager.js";
 // Adjusted import paths for schema and service assuming flat structure in build/tools
 import { adoPrChangesSchema, AdoPrChangesInput } from "./adoPrChangesSchema.js"; 
 import { getAdoConnectionAndApi, getPrDetails, getLatestPrIterationChanges } from "./adoPrChangesService.js";

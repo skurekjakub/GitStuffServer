@@ -1,5 +1,6 @@
 // src/tools/adoPrComment/adoPrCommentService.ts
-import { getAdoConfig } from "../../utils/utilities.js";
+import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.js";
+import { getAdoConfig } from "../../utils/configManager.js";
 import {
   AdoPrCommentRequest,
   AdoPrCommentResponse,

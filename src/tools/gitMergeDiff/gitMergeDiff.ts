@@ -4,11 +4,13 @@ import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import path from "path";
 import { readFile, unlink } from "fs/promises";
 import { 
-  runPowershellScript, 
+  runPowershellScript
+} from "../../utils/scriptRunner.js";
+import {
   OUTPUT_FILE_PATH,
   OUTPUT_DIFF_FILE,
   SCRIPT_PATH
-} from "../../utils/utilities.js";
+} from "../../utils/fileConstants.js";
 
 // Tool schema definition
 export const gitMergeDiffSchema = {
