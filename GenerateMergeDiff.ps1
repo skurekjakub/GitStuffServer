@@ -55,7 +55,7 @@ if (-not (Test-Path -Path $RepoPath -PathType Container)) {
 
 # --- Command Execution ---
 # Use 'git -C <path>' to run the command within the specified repository context
-$GitCommand = "git --no-pager -C `"$RepoPath`" show -m --first-parent $CommitHash -U100" # Use backticks for quotes if path has spaces
+$GitCommand = "git --no-pager -C `"$RepoPath`" show -U100 -m --first-parent $CommitHash" # Use backticks for quotes if path has spaces
 
 Write-Host "Running command in context of '$RepoPath': $GitCommand"
 Write-Host "Output will be saved to: $FullOutputPath (relative to current CWD)"
