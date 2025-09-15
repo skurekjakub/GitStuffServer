@@ -13,11 +13,11 @@ export const adoPrChangesHandler = async (input: AdoPrChangesInput): Promise<Cal
   try {
     const config = await getAdoConfig(input.organizationId);
 
-    if (!config.organization || !config.project || !config.pat) {
-      return { content: [{ type: "text", text: "ERROR: Missing required configuration parameters (organization, project, pat)." }], isError: true };
+    if (!config.organization || !config.project) {
+      return { content: [{ type: "text", text: "ERROR: Missing required configuration parameters (organization, project). Please ensure Azure CLI is authenticated and configuration is set." }], isError: true };
     }
 
-    const { gitApi } = await getAdoConnectionAndApi(config.organization, config.pat);
+    const { gitApi } = await getAdoConnectionAndApi(config.organization);
 
     const pullRequestIdNum = parseInt(input.pullRequestId, 10);
     const pr = await getPrDetails(gitApi, pullRequestIdNum, config.project);
