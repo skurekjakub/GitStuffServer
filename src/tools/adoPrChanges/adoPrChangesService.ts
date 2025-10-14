@@ -5,13 +5,18 @@ import * as GitInterfaces from "azure-devops-node-api/interfaces/GitInterfaces.j
 import { getAdoConfig } from "../../utils/configManager.js";
 import { streamToString } from "../../utils/utilities.js";
 import { TestRunOutcome } from "azure-devops-node-api/interfaces/TestInterfaces.js";
+import { getAzureCliAccessToken } from "../../utils/azureCliAuth.js";
 
 /**
- * Establishes connection to Azure DevOps and returns the GitApi instance.
+ * Establishes connection to Azure DevOps using Azure CLI authentication and returns the GitApi instance.
  */
-export async function getAdoConnectionAndApi(organization: string, pat: string): Promise<{ connection: azdev.WebApi, gitApi: GitApi }> {
+export async function getAdoConnectionAndApi(organization: string): Promise<{ connection: azdev.WebApi, gitApi: GitApi }> {
     const orgUrl = `https://dev.azure.com/${organization}`;
-    const authHandler = azdev.getPersonalAccessTokenHandler(pat);
+    
+    // Get access token from Azure CLI
+    const accessToken = await getAzureCliAccessToken(organization);
+    const authHandler = azdev.getBearerHandler(accessToken);
+    
     const connection = new azdev.WebApi(orgUrl, authHandler);
     const gitApi: GitApi = await connection.getGitApi();
     return { connection, gitApi };

@@ -12,14 +12,14 @@ export const adoPrThreadsHandler = async (input: AdoPrThreadsRequest): Promise<C
   try {
     const config = await getAdoConfig(input.organizationId);
 
-    if (!config.organization || !config.project || !config.pat) {
+    if (!config.organization || !config.project) {
       return {
-        content: [{ type: "text", text: "ERROR: Missing required configuration parameters (organization, project, pat)." }],
+        content: [{ type: "text", text: "ERROR: Missing required configuration parameters (organization, project). Please ensure Azure CLI is authenticated and configuration is set." }],
         isError: true,
       };
     }
 
-    const { gitApi } = await getAdoConnectionAndApi(config.organization, config.pat);
+    const { gitApi } = await getAdoConnectionAndApi(config.organization);
     const pullRequestIdNum = parseInt(input.pullRequestId, 10);
 
     if (isNaN(pullRequestIdNum)) {

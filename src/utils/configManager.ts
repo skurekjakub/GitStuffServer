@@ -15,7 +15,6 @@ export const CONFIG_FILE_PATH = path.resolve(projectRootDir, CONFIG_FILE_NAME);
  * ADO configuration interface for a single organization
  */
 export interface AdoConfig {
-  pat?: string;
   organization?: string;
   project?: string;
   repository?: string;
@@ -80,15 +79,6 @@ export async function getAdoConfig(organizationId?: string): Promise<AdoConfig> 
   // Override with environment variables
   const envPrefix = organizationId ? `ADO_${organizationId.toUpperCase()}_` : 'ADO_';
   
-  // Try organization-specific environment variables first
-  if (process.env[`${envPrefix}PAT`]) {
-    console.error(`[Config] Using ${envPrefix}PAT from environment variable`);
-    config.pat = process.env[`${envPrefix}PAT`];
-  } else if (!organizationId && process.env.ADO_PAT) {
-    console.error("[Config] Using ADO_PAT from environment variable");
-    config.pat = process.env.ADO_PAT;
-  }
-  
   if (process.env[`${envPrefix}ORG`]) {
     console.error(`[Config] Using ${envPrefix}ORG from environment variable`);
     config.organization = process.env[`${envPrefix}ORG`];
@@ -122,15 +112,4 @@ export async function getAdoConfig(organizationId?: string): Promise<AdoConfig> 
   }
   
   return config;
-}
-
-/**
- * Attempts to read the Azure DevOps Personal Access Token (PAT) from multiple sources.
- * 
- * @param organizationId Optional organization ID to get specific PAT
- * @returns The PAT string if found, null otherwise
- */
-export async function getAdoPat(organizationId?: string): Promise<string | null> {
-  const config = await getAdoConfig(organizationId);
-  return config.pat || null;
 }

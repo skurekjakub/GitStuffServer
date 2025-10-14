@@ -8,6 +8,7 @@ import {
   IndividualAdoPrCommentResult
 } from "./adoPrCommentSchema.js";
 import fetch from 'node-fetch';
+import { getAzureCliAccessToken } from "../../utils/azureCliAuth.js";
 
 const ADO_API_VERSION = "7.1-preview.1"; // Or your desired API version
 
@@ -58,11 +59,14 @@ async function postSingleAdoPrComment(
   console.error(`[ADO Comment] Request body: ${JSON.stringify(requestBody, null, 2)}`);
 
   try {
+    // Get access token from Azure CLI
+    const accessToken = await getAzureCliAccessToken(config.organization);
+    
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(`:${config.pat}`).toString('base64')}`,
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(requestBody),
     });
@@ -117,9 +121,6 @@ export async function postAdoPrComment(
   try {
     const config = await getAdoConfig(organizationId);
 
-    if (!config.pat) {
-      return { success: false, message: "Azure DevOps PAT not configured.", batchResults: [] };
-    }
     if (!config.organization) {
       return { success: false, message: "Azure DevOps organization not configured.", batchResults: [] };
     }
