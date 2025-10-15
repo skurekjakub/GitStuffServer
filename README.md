@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/skurekjakub-gitstuffserver-badge.png)](https://mseep.ai/app/skurekjakub-gitstuffserver)
+
 # Git Stuff Server
 
 This repository contains a Node.js application that acts as an MCP (Model Context Protocol) server to provide Git-related functionalities. Currently, it offers a tool to generate the diff for a Git merge commit against its first parent.
